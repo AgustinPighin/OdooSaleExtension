@@ -1,0 +1,87 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+#	* sale_order_extension
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 9.0c-20180406\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-04-09 11:07+0000\n"
+"PO-Revision-Date: 2018-04-09 11:07+0000\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: es_AR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: sale_order_extension
+#: model:ir.model.fields,field_description:sale_order_extension.field_sale_order_line_last_seller_date
+msgid "Fecha Ultimo Precio Proveedor"
+msgstr "Fecha Ultimo Precio Proveedor"
+
+#. module: sale_order_extension
+#: model:ir.model,name:sale_order_extension.model_product_supplierinfo
+msgid "Information about a product vendor"
+msgstr "Informatcion sobre el producto del proveedor"
+
+#. module: sale_order_extension
+#: model:ir.model.fields,field_description:sale_order_extension.field_sale_order_line_product_customer_invoice_lines
+msgid "Last Customer Invoice Lines for Product"
+msgstr "Ultimos precios de venta del producto "
+
+#. module: sale_order_extension
+#: model:ir.model.fields,field_description:sale_order_extension.field_sale_order_line_product_vendor_invoice_lines
+msgid "Last Vendor Invoice Lines for Product"
+msgstr "Ultimos precios de compra del producto"
+
+#. module: sale_order_extension
+#: model:ir.model.fields,field_description:sale_order_extension.field_sale_order_price_default
+msgid "Precio Default"
+msgstr "Precio Default"
+
+#. module: sale_order_extension
+#: model:ir.model,name:sale_order_extension.model_product_product
+msgid "Product"
+msgstr "Producto"
+
+#. module: sale_order_extension
+#: model:ir.model,name:sale_order_extension.model_product_template
+msgid "Product Template"
+msgstr "Plantilla producto"
+
+#. module: sale_order_extension
+#: model:ir.model.fields,field_description:sale_order_extension.field_product_supplierinfo_sale_line_ids
+msgid "Sale Order Lines"
+msgstr "Líneas de pedido de venta"
+
+#. module: sale_order_extension
+#: model:ir.model,name:sale_order_extension.model_sale_order
+msgid "Sales Order"
+msgstr "Orden de Ventas"
+
+#. module: sale_order_extension
+#: model:ir.model,name:sale_order_extension.model_sale_order_line
+msgid "Sales Order Line"
+msgstr "Línea de Pedido de Ventas"
+
+#. module: sale_order_extension
+#: model:ir.model.fields,field_description:sale_order_extension.field_sale_order_line_product_seller_ids
+msgid "Seller Id"
+msgstr "Precios acordados con proveedores"
+
+#. module: sale_order_extension
+#: model:ir.ui.view,arch_db:sale_order_extension.view_order_form_inherit_sale
+msgid "Ultimos precio de compra a proveedor"
+msgstr "Ultimos precios de compra a proveedor 2"
+
+#. module: sale_order_extension
+#: model:ir.ui.view,arch_db:sale_order_extension.view_order_form_inherit_sale
+msgid "Ultimos precio de proveedor"
+msgstr "Ultimos precios de proveedor"
+
+#. module: sale_order_extension
+#: model:ir.ui.view,arch_db:sale_order_extension.view_order_form_inherit_sale
+msgid "Ultimos precio de venta al cliente"
+msgstr "Ultimos precios de venta al cliente"
+

@@ -1,0 +1,77 @@
+<openerp>
+  <data>
+    <record id="view_order_form_inherit_sale" model="ir.ui.view">
+        <field name="name">sale.order.sale.seller</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+          <data>
+            <field name="qty_invoiced" position="attributes">
+                <attribute name="attrs">{'invisible': [('state', 'not in', ('sale','done'))]}</attribute>
+            </field>
+            <field name="qty_delivered" position="attributes">
+                <attribute name="attrs">{'invisible': [('state', 'not in', ('sale','done'))]}</attribute>
+            </field>
+            <field name="purchase_price" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </field>
+            <field name='price_unit' position="after">
+                <field name="last_seller_price" groups="base.group_user"/>
+                <field name="last_seller_date" groups="base.group_user"/>
+                <field name="last_seller_brand" groups="base.group_user"/>
+            </field>
+            <xpath expr="//field[@name='order_line']/tree/field[@name='price_unit']" position="after">
+                <field name="last_seller_price" groups="base.group_user" />
+                <field name="last_seller_date" groups="base.group_user" />
+                <field name="last_seller_brand" groups="base.group_user"/>            
+            </xpath>
+            <xpath expr="//field[@name='order_line']/form//field[@name='name']" position="after">
+                  <label for="product_seller_ids"/>
+                  <field name="product_seller_ids">
+                      <tree string="Ultimos precio de proveedor">
+                          <field name="name"/>
+                          <field name="price"/>
+                          <field name="product_name"/>
+                          <field name="date_start"/>
+                          <field name="date_end"/>
+                      </tree>
+                  </field>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/form//field[@name='product_seller_ids']" position="after">
+                  <label for="product_customer_invoice_lines"/>
+                  <field name="product_customer_invoice_lines">
+                      <tree string="Ultimos precio de venta al cliente">
+                          <field name="partner_id"/>
+                          <field name="price_unit"/>
+                          <field name="write_date"/>
+                      </tree>
+                  </field>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/form//field[@name='product_seller_ids']" position="after">
+                  <label for="product_vendor_invoice_lines"/>
+                  <field name="product_vendor_invoice_lines">
+                      <tree string="Ultimos precio de compra a proveedor">
+                          <field name="partner_id"/>
+                          <field name="price_unit"/>
+                          <field name="write_date"/>
+                      </tree>
+                  </field>
+            </xpath>
+          </data>
+        </field>
+    </record>
+    <record model="ir.ui.view" id="res_partner_price_validity_form_view">
+        <field name="name">res.partner.price.validity.form</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <group name="purchase" position="inside">
+                <field name="price_validity_dates"
+                       attrs="{'invisible':[('supplier', '=', False)]}"
+                />
+            </group>
+    </field>
+    </record>
+  </data>
+
+</openerp>
