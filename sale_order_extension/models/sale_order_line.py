@@ -16,23 +16,35 @@ class SaleOrder(models.Model):
     price_default = fields.Float( string='Precio Default', default=9 )
     rentabilidad_default = fields.Float(string='Rentabilidad Default', digits=dp.get_precision('Discount'), default=20.0 )
 
+    @api.multi
+    def compute_rentabilidad(self):
+        _logger.info("1.1TESTAGU-SaleOrder-Compute Rentabilidad")
+
+        for line in self.order_line:
+            if line.product_tmpl_id:
+                _logger.info("1.1TESTAGU-SaleOrder-Compute Rentabilidad -> Product ID: %s" % (line.product_tmpl_id))
+                line.rentabilidad = self.rentabilidad_default
+                line.price_unit = line.purchase_price * ( 1 + ( line.rentabilidad / 100 ) )
+                line._compute_amount()
+                line._update_cost_subtotal()
+                line._update_margin_extended()
+                _logger.info("1.2-TESTAGU-SaleOrder-Compute Rentabilidad -> Linea: %s" % (line))
+
 class SaleOrderLine(models.Model):
     
     _inherit = 'sale.order.line'
 
-    last_seller_price = fields.Float( string='Costo Probable', compute='_get_last_seller_price', store="True")
-    last_seller_date  = fields.Date('Inicio Validez' )
+    last_seller_price = fields.Float( string='Costo Probable', store="True")
+    last_seller_date  = fields.Date('Inicio Validez',store="True" )
     last_seller_brand = fields.Char('Marca Proveedor',store="True" )
 
-    rentabilidad = fields.Float(string='Rentabilidad (%)', digits=dp.get_precision('Discount'))
-    cost_subtotal = fields.Monetary(string='Costo Subtotal')
+    rentabilidad  = fields.Float(string='Rentabilidad (%)', store="True", digits=dp.get_precision('Discount'),default=20.0)
+    cost_subtotal = fields.Monetary(string='Costo Subtotal',store="True")
     
     
-    product_seller_ids = fields.Many2many('product.supplierinfo', string='Seller Id', compute="_get_sellers_id", readonly=False, copy=False)
-    
-    product_customer_invoice_lines = fields.Many2many('account.invoice.line', string='Last Customer Invoice Lines for Product', compute="_get_customer_invoice_lines", readonly=False, copy=False)
-    
-    product_vendor_invoice_lines = fields.Many2many('account.invoice.line', string='Last Vendor Invoice Lines for Product', compute="_get_vendor_invoice_lines", readonly=False, copy=False)
+    product_seller_ids              = fields.Many2many('product.supplierinfo', string='Seller Id', compute="_get_sellers_id", readonly=False, copy=False)
+    product_customer_invoice_lines  = fields.Many2many('account.invoice.line', string='Last Customer Invoice Lines for Product', compute="_get_customer_invoice_lines", readonly=False, copy=False)
+    product_vendor_invoice_lines    = fields.Many2many('account.invoice.line', string='Last Vendor Invoice Lines for Product', compute="_get_vendor_invoice_lines", readonly=False, copy=False)
     
 
     @api.multi
@@ -59,11 +71,6 @@ class SaleOrderLine(models.Model):
 
                 line.product_customer_invoice_lines = self.env['account.invoice.line'].search(domain)
     
-    @api.onchange('product_id', 'product_uom')
-    def product_id_change_margin(self):
-        _logger.info('6.1 Sobreescritura del product_id_change_margin')
-        return
-
     @api.multi
     @api.onchange('product_id')
     def _get_vendor_invoice_lines(self):
@@ -75,38 +82,63 @@ class SaleOrderLine(models.Model):
 
                 line.product_vendor_invoice_lines = self.env['account.invoice.line'].search(domain)
 
-    @api.model
-    def create(self, vals):
-        # Calculation of the margin for programmatic creation of a SO line. It is therefore not
-        # necessary to call product_id_change_margin manually
-        _logger.info('5.1 Sobreescritura del CREATE METHOD')
-        if 'purchase_price' not in vals:
-            _logger.info('3.1 TESTAGU-SaleItem-Update Purchase not in price')
-        else:
-            _logger.info('3.1 TESTAGU-SaleItem-Update Purchase in price: %s ' % (vals['purchase_price']))
-        #    order_id = self.env['sale.order'].browse(vals['order_id'])
-        #    product_id = self.env['product.product'].browse(vals['product_id'])
-        #    product_uom_id = self.env['product.uom'].browse(vals['product_uom'])
 
-        #    vals['purchase_price'] = self._compute_margin(order_id, product_id, product_uom_id)
-        
-        return super(SaleOrderLine, self).create(vals)
+
 
     @api.multi
-    @api.onchange('rentabilidad', 'purchase_price','product_uom_qty')
+    def _compute_rentabilidad(self):
+        for line in self: 
+            if line.product_tmpl_id:
+                _logger.info('12.1 TESTAGU-compute_rentabilidad-SaleItem-Compute Rentabilidad LInea')
+                if not line.rentabilidad:
+                    line.rentabilidad = line.order_id.rentabilidad_default
+
+
+    @api.onchange('product_id', 'product_uom')
+    def product_id_change_margin(self):
+        _logger.info('2.1 Sobreescritura del product_id_change_margin')
+        return
+
+    @api.depends('product_uom_qty', 'discount', 'price_unit', 'tax_id')
+    def _compute_amount(self):
+        """
+        Compute the amounts of the SO line.
+        """
+        for line in self:
+            price = line.price_unit * (1 - (line.discount or 0.0) / 100.0)
+            _logger.info('15.1 Sobreescritura del _compute_amount Price %s' % (price) )
+            taxes = line.tax_id.compute_all(price, line.order_id.currency_id, line.product_uom_qty, product=line.product_id, partner=line.order_id.partner_id)
+            _logger.info('15.2 Sobreescritura del _compute_amount Taxes%s' % (taxes) )
+            line.update({
+                'price_tax': taxes['total_included'] - taxes['total_excluded'],
+                'price_total': taxes['total_included'],
+                'price_subtotal': taxes['total_excluded'],
+            })
+
+    @api.depends('price_subtotal', 'product_uom_qty')
+    def _get_price_reduce(self):
+        _logger.info('11.1 TESTAGU-_get_price_reduce-SaleItem-price_subtotalproduct_uom_qty')
+        for line in self:
+            _logger.info('11.1 TESTAGU-_get_price_reduce-SaleItem-price_subtotal %s Price unit %s ' % ( line.price_subtotal, line.price_unit))
+            line.price_reduce = line.price_subtotal / line.product_uom_qty if line.product_uom_qty else 0.0
+
+    @api.multi
+    @api.onchange('rentabilidad')
     def update_price_unit(self):
         
-        _logger.info("1.1TESTAGU-SaleItem-Update Price Unit Method")
+        _logger.info("1.1TESTAGU-SaleItem-update_price_unit-Update Price Unit Method")
         
         for line in self: 
             if line.product_tmpl_id:
                 _logger.info('1.2 TESTAGU-SaleItem-Update Price-Price Unit %s' % (line.price_unit))
                 _logger.info('1.3 TESTAGU-SaleItem-Update Price-Purchase Price %s' % (line.purchase_price))
-                line.price_unit     = line.purchase_price * ( 1 + ( line.rentabilidad / 100 ) )
+                #if not line.rentabilidad:
+                #    line.rentabilidad = line.order_id.rentabilidad_default
+                line.price_unit = line.purchase_price * ( 1 + ( line.rentabilidad / 100 ) )
                 _logger.info('1.4 TESTAGU-SaleItem-Update Price-Price Unit changed %s' % (line.price_unit))
 
     @api.multi
-    @api.onchange('purchase_price','product_uom_qty')
+    @api.onchange('product_uom_qty','purchase_price','price_unit','rentabilidad')
     def _update_cost_subtotal(self):
         _logger.info('3.1 TESTAGU-SaleItem-Update Cost sutbtotal')
         for line in self:
@@ -114,14 +146,16 @@ class SaleOrderLine(models.Model):
             if line.product_tmpl_id:
                 _logger.info('3.2.1 TESTAGU-SaleItem-Cost %s , qty %s ' % (line.purchase_price,line.product_uom_qty))
                 line.cost_subtotal  = line.purchase_price * line.product_uom_qty
-                _logger.info('3.2.2 TESTAGU-SaleItem-Costo Subtotal %s ' % (line.cost_subtotal))
+                line.price_unit     = line.purchase_price * ( 1 + ( line.rentabilidad / 100 ) )
+                _logger.info('3.2.2 TESTAGU-SaleItem-Costo Subtotal (%s, %s) ' % (line.cost_subtotal,line.price_unit))
 
     @api.multi
-    @api.onchange('price_subtotal','cost_subtotal')
+    @api.onchange('cost_subtotal','price_subtotal')
     def _update_margin_extended(self):
         _logger.info('7.1 TESTAGU-Update margin Line')
         for line in self:
-            _logger.info('7.2 TESTAGU-Update margin Line Product %s' % ('product_id'))
+            _logger.info('7.2 TESTAGU-Update margin Line Product %s' % (line.product_id))
+            _logger.info('7.2 TESTAGU-Update margin Line Product Price Subtotal %s Cost subtotal %s ' % (line.price_subtotal,line.cost_subtotal))
             line.margin = line.price_subtotal - line.cost_subtotal
 
     @api.model
@@ -130,7 +164,7 @@ class SaleOrderLine(models.Model):
         return {}                
  
     @api.multi
-    @api.onchange('product_id', 'product_uom','product_uom_qty')
+    @api.onchange('product_id','product_uom_qty')
     def _get_last_seller_price(self):
         
         _logger.info("2.1 TESTAGU-SaleItem-LAST SELLER METHOD CALL")
@@ -172,8 +206,12 @@ class SaleOrderLine(models.Model):
                         line.last_seller_price = seller.price
                         _logger.info('2.6.4 TESTAGU-SaleItem-Last Seller Price %s ' % (line.last_seller_price))
                         line.purchase_price    = seller.price
-                        line.cost_subtotal     = line.purchase_price * line.product_uom_qty
+                        #line.cost_subtotal     = line.purchase_price * line.product_uom_qty
                         _logger.info('2.6.5 TESTAGU-SaleItem-Purchase Price %s' % (line.purchase_price))
+
+                        #if not line.rentabilidad:
+                        #line.rentabilidad = line.order_id.rentabilidad_default
+
                         line.price_unit        = line.purchase_price * ( 1 + ( line.rentabilidad / 100 ) )
                         _logger.info('2.6.6 TESTAGU-SaleItem-Price Unit %s' % (line.price_unit))
                     else:

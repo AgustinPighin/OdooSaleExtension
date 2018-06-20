@@ -1,5 +1,21 @@
 <openerp>
   <data>
+    <record id="view_order_form_rent" model="ir.ui.view">
+        <field name="name">delivery.sale.order.form.view.rent</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <data>
+                <xpath expr="//field[@name='payment_term_id']" position="after">
+                    <div>
+                        <field name="rentabilidad_default" string="Rentabilidad" class="oe_inline"/>
+                        <button name="compute_rentabilidad" type="object" string="Re-asignar Rentabilidad" states="draft" class="oe_link oe_inline" attrs="{'invisible':[('state','not in',['draft'])]}"/>
+                    </div>
+                </xpath>
+            </data>
+        </field>
+    </record>
+
     <record id="view_order_form_inherit_sale" model="ir.ui.view">
         <field name="name">sale.order.sale.seller</field>
         <field name="model">sale.order</field>
@@ -15,10 +31,6 @@
                 <attribute name="attrs">{'invisible': [('state', 'not in', ('sale','done'))]}</attribute>
             </field>
 
-            <xpath expr="//field[@name='order_line']/tree//field[@name='product_id']" position="after">
-                <field name="last_seller_brand" string="Marca Proveedor" />      
-            </xpath>
-
             <xpath expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="attributes">
                 <attribute name="attrs">{'invisible': [('state', 'not in', ('sale','done'))]}</attribute>        
             </xpath>
@@ -27,30 +39,39 @@
                 <attribute name="attrs">{'invisible': [('state', 'not in', ('sale','done'))]}</attribute>   
             </xpath>
 
+            <xpath expr="//field[@name='order_line']/tree//field[@name='product_id']" position="after">
+                <field name="last_seller_brand" string="Marca Proveedor" />      
+            </xpath>
+
             <xpath expr="//field[@name='order_line']/tree//field[@name='purchase_price']" position="after">
                 <field name="last_seller_price" invisible="1" />
-                <field name="last_seller_date" string="Inicio Validez" />
+                <field name="last_seller_date" string="Inicio Validez"/>
                 <field name="rentabilidad"  string="Rentabilidad (%)"/>
                 <field name="price_reduce" string="Precio c/rent"/>  
             </xpath>
 
             <xpath expr="//field[@name='order_line']/tree//field[@name='price_subtotal']" position="after">
-                <field name="cost_subtotal" string="Subtotal Costo" readonly='1'/>
+                <field name="cost_subtotal" string="Subtotal Costo"/>
                 <field name="margin" string="Subtotal Margen"/>
                 <field name="price_tax" string="Subtotal Impuestos"/>  
             </xpath>
 
-            <xpath expr="//field[@name='order_line']/form//field[@name='price_unit']" position="after">
+            <xpath expr="//field[@name='order_line']/form//field[@name='product_id']" position="after">
                 <field name="last_seller_brand"/>
-                <field name="last_seller_date" />
-                <field name="last_seller_price" invisible="1" />
-                <field name="rentabilidad"/>
-                <field name="cost_subtotal"/>  
-                <field name="price_reduce"/>
-                <field name="price_subtotal"/>
-                <field name="price_tax"/>
-                <field name="margin"/>
             </xpath>
+
+            <xpath expr="//field[@name='order_line']/form//field[@name='purchase_price']" position="after">                
+                <field name="last_seller_date" string="Inicio Validez"/>
+                <field name="last_seller_price" invisible="1" />
+                <field name="rentabilidad"   string="Rentabilidad (%)"/>
+                <field name="price_reduce"   string="Precio c/rent" />
+                <field name="price_subtotal" string="Precio subtotal" />
+                <field name="cost_subtotal"  string="Subtotal Costo"/>  
+                <field name="margin"         string="Subtotal Margen"/>
+                <field name="price_tax"      string="Subtotal Impuestos"/>
+            </xpath>
+
+
             <xpath expr="//field[@name='order_line']/form//field[@name='name']" position="after">
                   <label for="product_seller_ids"/>
                   <field name="product_seller_ids">
