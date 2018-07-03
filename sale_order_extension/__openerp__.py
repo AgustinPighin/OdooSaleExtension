@@ -16,7 +16,7 @@
     # Check https://github.com/odoo/odoo/blob/master/openerp/addons/base/module/module_data.xml
     # for the full list
     'category': 'test',
-    'version': '9.0.0.1.82',
+    'version': '9.0.0.1.85',
     'installable': True,
     'auto_install': False,
     'application': False,

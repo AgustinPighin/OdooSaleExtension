@@ -6,12 +6,20 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <data>
+                <xpath expr="//button[@name='action_cancel']" position="after">
+                        <button name="recalculate_purchase_price" states="draft" string="Recalcular Costos" type="object"/>
+                </xpath>
                 <xpath expr="//field[@name='payment_term_id']" position="after">
                     <div>
                         <field name="rentabilidad_default" string="Rentabilidad" class="oe_inline"/>
                         <button name="compute_rentabilidad" type="object" string="Re-asignar Rentabilidad" states="draft" class="oe_link oe_inline" attrs="{'invisible':[('state','not in',['draft'])]}"/>
                     </div>
                 </xpath>
+                <xpath expr="//group[@name='sale_total']" position="after">
+                    <group name="stotal_cost_grp">
+                        <field name="total_cost" widget='monetary' options="{'currency_field': 'currency_id'}" string="Costo Total"/>
+                    </group>
+                </xpath>                
             </data>
         </field>
     </record>

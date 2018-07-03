@@ -13,22 +13,50 @@ _logger = logging.getLogger(__name__)
 class SaleOrder(models.Model):
     
     _inherit = 'sale.order'
+    total_cost = fields.Monetary(string='Costo Total', store=True, readonly=True, compute='_calcular_costo_total')
+
     price_default = fields.Float( string='Precio Default', default=9 )
     rentabilidad_default = fields.Float(string='Rentabilidad Default', digits=dp.get_precision('Discount'), default=20.0 )
 
+    @api.depends('order_line.cost_subtotal')
+    def _calcular_costo_total(self):
+        """
+        Compute the total cost of the SO
+        """
+        for order in self:
+            costo_total = 0.0
+            for line in order.order_line:
+                costo_total += line.cost_subtotal
+
+            order.update({
+                'total_cost': costo_total,
+            })
+
+
     @api.multi
     def compute_rentabilidad(self):
-        _logger.info("1.1TESTAGU-SaleOrder-Compute Rentabilidad")
+        _logger.info("1.1-TESTAGU-SaleOrder-Compute Rentabilidad")
 
         for line in self.order_line:
             if line.product_tmpl_id:
-                _logger.info("1.1TESTAGU-SaleOrder-Compute Rentabilidad -> Product ID: %s" % (line.product_tmpl_id))
+                _logger.info("1.1-TESTAGU-SALE HEADER-Compute Rentabilidad -> Product ID: %s" % (line.product_tmpl_id))
                 line.rentabilidad = self.rentabilidad_default
-                line.price_unit = line.purchase_price * ( 1 + ( line.rentabilidad / 100 ) )
-                line._compute_amount()
-                line._update_cost_subtotal()
-                line._update_margin_extended()
-                _logger.info("1.2-TESTAGU-SaleOrder-Compute Rentabilidad -> Linea: %s" % (line))
+
+        _logger.info("1.3-TESTAGU-SALE HEADER-Compute Rentabilidad-Cost Subtotal")
+        self.order_line._update_cost_subtotal()
+
+        _logger.info("1.4-TESTAGU-SALE HEADER-Compute Rentabilidad-Update Margin extended")
+        self.order_line._update_margin_extended()
+
+    @api.multi
+    def recalculate_purchase_price(self):
+
+        _logger.info("2.1-TESTAGU-SALE HEADER-Recalcular last seller price.")
+        
+        self.order_line._get_last_seller_price()
+        self.order_line._update_cost_subtotal()
+        self.order_line._update_margin_extended()
+
 
 class SaleOrderLine(models.Model):
     
@@ -56,7 +84,7 @@ class SaleOrderLine(models.Model):
                             ('date_end'  , '!=', False  )  ]
                 sellers = self.env['product.supplierinfo'].search(domain)
                 if sellers:
-                    line.product_seller_ids = sellers
+                    line.product_seller_ids = sellers 
 
     @api.multi
     @api.onchange('product_id')
