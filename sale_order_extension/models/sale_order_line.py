@@ -65,6 +65,7 @@ class SaleOrderLine(models.Model):
     last_seller_price = fields.Float( string='Costo Probable', store="True")
     last_seller_date  = fields.Date('Inicio Validez',store="True" )
     last_seller_brand = fields.Char('Marca Proveedor',store="True" )
+    last_seller_id    = fields.Many2one('product.supplierinfo', string='Seller Id', readonly=True, copy=False)
 
     rentabilidad  = fields.Float(string='Rentabilidad (%)', store="True", digits=dp.get_precision('Discount'),default=20.0)
     cost_subtotal = fields.Monetary(string='Costo Subtotal',store="True")
@@ -239,7 +240,7 @@ class SaleOrderLine(models.Model):
 
                         #if not line.rentabilidad:
                         #line.rentabilidad = line.order_id.rentabilidad_default
-
+                        line.last_seller_id    = seller.id
                         line.price_unit        = line.purchase_price * ( 1 + ( line.rentabilidad / 100 ) )
                         _logger.info('2.6.6 TESTAGU-SaleItem-Price Unit %s' % (line.price_unit))
                     else:
