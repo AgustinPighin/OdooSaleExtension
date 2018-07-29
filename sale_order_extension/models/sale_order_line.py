@@ -195,10 +195,18 @@ class SaleOrderLine(models.Model):
     @api.multi
     @api.onchange('product_id','product_uom_qty')
     def _get_last_seller_price(self):
-        
-        _logger.info("2.1 TESTAGU-SaleItem-LAST SELLER METHOD CALL")
+
+        _logger.info("2.1 LastSellerPrice-LAST SELLER METHOD CALL")
+
+        todaynof = datetime.now()
+        _logger.info('2.2 LastSellerPrice-Fecha de hoy sin formato es %s' % (todaynof))
+        today = datetime.now().strftime('%Y-%m-%d')
+        _logger.info('2.2 LastSellerPrice-Fecha de hoy formateada es %s' % (today))
+        monthago = datetime.strptime( today, '%Y-%m-%d') - relativedelta(days=30)
+        _logger.info('2.3 LastSellerPrice-Fecha de hace un mes %s' % (monthago))
 
         for line in self:
+            
             if line.product_tmpl_id and line.state not in ('sale','done'):
 
                 qty         = line.product_uom_qty
@@ -207,15 +215,13 @@ class SaleOrderLine(models.Model):
                 _logger.info("***********************************")
 
                 date_order  = line.order_id.date_order
+                _logger.info('2.2 LastSellerPrice-Fecha de orden %s' % (date_order))
                 product_uom = line.product_uom
-                seller      = line.product_tmpl_id._select_sale_seller( quantity=qty, date=date_order and date_order[:10], uom_id=product_uom )
+                seller      = line.product_tmpl_id._select_sale_seller( quantity=qty, date=today and today[:10], uom_id=product_uom )
                 
                 if seller:
                     
-                    today = datetime.now().strftime('%Y-%m-%d')
-                    _logger.info('2.2 TESTAGU-SaleItem-Fecha de hoy %s' % (today))
-                    monthago = datetime.strptime( today, '%Y-%m-%d') - relativedelta(days=30)
-                    _logger.info('2.3 TESTAGU-SaleItem-Fecha de hace un mes %s' % (monthago))
+
                     _logger.info('2.4 TESTAGU-SaleItem-Fecha de linea %s' % (seller.date_end))
 
                     if seller.date_end == False:
@@ -226,7 +232,7 @@ class SaleOrderLine(models.Model):
                         line.last_seller_brand = ' '
                         line.last_seller_price = 0.0
                         line.last_seller_date  = False
-                    elif seller.date_end and today < seller.date_end:
+                    elif seller.date_end and today <= seller.date_end:
                         _logger.info("2.6.1 TESTAGU-SaleItem-Seller Found %s" % (seller.id))
                         _logger.info('2.6.2 TESTAGU-SaleItem-Seller Found today %s <date_end%s ' % (today,seller.date_end))
                         line.last_seller_brand = seller.product_name
@@ -304,7 +310,9 @@ class ProductTemplate(models.Model):
         # product.product model
         self.ensure_one()
         res = self.env['product.supplierinfo'].browse([])
-        for seller in self.seller_ids:
+        sellers = self.seller_ids.sorted( key = ( lambda x: x.date_end ) , reverse=True )
+        
+        for seller in sellers:
             _logger.info("TESTAGU-99.1ProdTemplate-Probando con Seller ID: %s " % (seller.name))
             quantity_uom_seller = quantity
             _logger.info("TESTAGU-99.2 ProdTemplate-Cantidad UOM SELLER: %s " % (quantity_uom_seller))
@@ -326,7 +334,7 @@ class ProductTemplate(models.Model):
             _logger.info("TESTAGU-99.2.5-ProdTemplate-SellerFound!:%s,fechaS %s" % ( seller.id, seller.date_end ) )
             res |= seller
             break
-        return res
+        return  res
 
     @api.multi
     def _get_sale_sellers(self):
