@@ -10,8 +10,11 @@
                         <button name="recalculate_purchase_price" states="draft" string="Recalcular Costos" type="object"/>
                 </xpath>
                 <xpath expr="//field[@name='payment_term_id']" position="after">
+                    
+                    <field name="compute_disabled" string="Deshabilitar calculo precio" attrs="{'invisible':[('state','not in',['draft'])]}"/>
+                    
                     <div>
-                        <field name="rentabilidad_default" string="Rentabilidad" class="oe_inline"/>
+                        <field name="rentabilidad_default" string="Rentabilidad" class="oe_inline" attrs="{'invisible':[('state','not in',['draft'])]}"/>
                         <button name="compute_rentabilidad" type="object" string="Re-asignar Rentabilidad" states="draft" class="oe_link oe_inline" attrs="{'invisible':[('state','not in',['draft'])]}"/>
                     </div>
                 </xpath>

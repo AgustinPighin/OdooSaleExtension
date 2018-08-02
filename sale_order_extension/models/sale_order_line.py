@@ -14,6 +14,7 @@ class SaleOrder(models.Model):
     
     _inherit = 'sale.order'
     total_cost = fields.Monetary(string='Costo Total', store=True, readonly=True, compute='_calcular_costo_total')
+    compute_disabled = fields.Boolean(string='Desabilitar calculo precios', help="Marcar para desabilitar el calculo de precios y mejorar la performance", default=False)
 
     price_default = fields.Float( string='Precio Default', default=9 )
     rentabilidad_default = fields.Float(string='Rentabilidad Default', digits=dp.get_precision('Discount'), default=20.0 )
@@ -128,28 +129,42 @@ class SaleOrderLine(models.Model):
         _logger.info('2.1 Sobreescritura del product_id_change_margin')
         return
 
-    @api.depends('product_uom_qty', 'discount', 'price_unit', 'tax_id')
+    @api.depends('product_uom_qty','price_unit', 'tax_id')
     def _compute_amount(self):
         """
         Compute the amounts of the SO line.
         """
+
         for line in self:
-            price = line.price_unit * (1 - (line.discount or 0.0) / 100.0)
-            _logger.info('15.1 Sobreescritura del _compute_amount Price %s' % (price) )
-            taxes = line.tax_id.compute_all(price, line.order_id.currency_id, line.product_uom_qty, product=line.product_id, partner=line.order_id.partner_id)
-            _logger.info('15.2 Sobreescritura del _compute_amount Taxes%s' % (taxes) )
-            line.update({
-                'price_tax': taxes['total_included'] - taxes['total_excluded'],
-                'price_total': taxes['total_included'],
-                'price_subtotal': taxes['total_excluded'],
-            })
+            
+            if not line.order_id.compute_disabled:
+           
+                price = line.price_unit * (1 - (line.discount or 0.0) / 100.0)
+                _logger.info('15.1 Sobreescritura del _compute_amount Price %s' % (price) )
+                taxes = line.tax_id.compute_all(price, line.order_id.currency_id, line.product_uom_qty, product=line.product_id, partner=line.order_id.partner_id)
+                _logger.info('15.2 Sobreescritura del _compute_amount Taxes%s' % (taxes) )
+                line.update({
+                    'price_tax': taxes['total_included'] - taxes['total_excluded'],
+                    'price_total': taxes['total_included'],
+                    'price_subtotal': taxes['total_excluded'],
+                })
+
+            else:
+
+                _logger.info('15.3 Compute disabled %' )
+
+                return
 
     @api.depends('price_subtotal', 'product_uom_qty')
     def _get_price_reduce(self):
         _logger.info('11.1 TESTAGU-_get_price_reduce-SaleItem-price_subtotalproduct_uom_qty')
         for line in self:
-            _logger.info('11.1 TESTAGU-_get_price_reduce-SaleItem-price_subtotal %s Price unit %s ' % ( line.price_subtotal, line.price_unit))
-            line.price_reduce = line.price_subtotal / line.product_uom_qty if line.product_uom_qty else 0.0
+            if not line.order_id.compute_disabled:
+                _logger.info('11.1 TESTAGU-_get_price_reduce-SaleItem-price_subtotal %s Price unit %s ' % ( line.price_subtotal, line.price_unit))
+                line.price_reduce = line.price_subtotal / line.product_uom_qty if line.product_uom_qty else 0.0
+            else:              
+                _logger.info('15.3 Compute disabled' )
+                return
 
     @api.multi
     @api.onchange('rentabilidad')
@@ -208,6 +223,9 @@ class SaleOrderLine(models.Model):
         for line in self:
             
             if line.product_tmpl_id and line.state not in ('sale','done'):
+
+                if line.order_id.compute_disabled:
+                    return
 
                 qty         = line.product_uom_qty
                 _logger.info("***********************************")
