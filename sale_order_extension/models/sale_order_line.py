@@ -70,23 +70,26 @@ class SaleOrderLine(models.Model):
 
     rentabilidad  = fields.Float(string='Rentabilidad (%)', store="True", digits=dp.get_precision('Discount'),default=20.0)
     cost_subtotal = fields.Monetary(string='Costo Subtotal',store="True")
+
     
+    product_seller_ids              = fields.One2many('product.supplierinfo', 'product_tmpl_id', string='Seller Id', readonly=False)
+
     
-    product_seller_ids              = fields.Many2many('product.supplierinfo', string='Seller Id', compute="_get_sellers_id", readonly=False, copy=False)
-    product_customer_invoice_lines  = fields.Many2many('account.invoice.line', string='Last Customer Invoice Lines for Product', compute="_get_customer_invoice_lines", readonly=False, copy=False)
+    #product_seller_ids              = fields.Many2many('product.supplierinfo', string='Seller Id', compute="_get_sellers_id", readonly=False, copy=False)
+    product_customer_invoice_lines  = fields.Many2many('account.invoice.line',  string='Last Customer Invoice Lines for Product', compute="_get_customer_invoice_lines", readonly=False, copy=False)
     product_vendor_invoice_lines    = fields.Many2many('account.invoice.line', string='Last Vendor Invoice Lines for Product', compute="_get_vendor_invoice_lines", readonly=False, copy=False)
     
 
-    @api.multi
-    @api.onchange('product_id')
-    def _get_sellers_id(self):
-        for line in self:
-            if line.product_tmpl_id:
-                domain = [  ('product_tmpl_id', '=', line.product_tmpl_id.id ),
-                            ('date_end'  , '!=', False  )  ]
-                sellers = self.env['product.supplierinfo'].search(domain)
-                if sellers:
-                    line.product_seller_ids = sellers 
+    #@api.multi
+    #@api.onchange('product_id')
+    #def _get_sellers_id(self):
+    #    for line in self:
+    #        if line.product_tmpl_id:
+    #            domain = [  ('product_tmpl_id', '=', line.product_tmpl_id.id ),
+    #                        ('date_end'  , '!=', False  )  ]
+    #            sellers = self.env['product.supplierinfo'].search(domain)
+    #            if sellers:
+    #                line.product_seller_ids = sellers 
 
     @api.multi
     @api.onchange('product_id')

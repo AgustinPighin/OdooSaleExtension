@@ -121,6 +121,17 @@
           </data>
         </field>
     </record>
+    <record id="view_reference_on_tree_viewq" model="ir.ui.view">
+        <field name="name">sale.order.reference.on_treeq</field>
+        <field name="model">sale.order</field>
+        <field name="priority" eval="99"/>
+        <field name="inherit_id" ref="sale.view_quotation_tree"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="client_order_ref"/>
+            </field>
+        </field>
+    </record>
     <record model="ir.ui.view" id="res_partner_price_validity_form_view">
         <field name="name">res.partner.price.validity.form</field>
         <field name="model">res.partner</field>
