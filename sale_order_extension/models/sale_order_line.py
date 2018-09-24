@@ -70,52 +70,45 @@ class SaleOrderLine(models.Model):
 
     rentabilidad  = fields.Float(string='Rentabilidad (%)', store="True", digits=dp.get_precision('Discount'),default=20.0)
     cost_subtotal = fields.Monetary(string='Costo Subtotal',store="True")
-
+   
+    #product_seller_ids              = fields.Many2many('product.supplierinfo', string='Seller Id', compute="_get_sellers_id", readonly=False, copy=False)
+    #product_customer_invoice_lines  = fields.Many2many('account.invoice.line',  string='Last Customer Invoice Lines for Product', compute="_get_customer_invoice_lines", readonly=False, copy=False)
+    #product_vendor_invoice_lines    = fields.Many2many('account.invoice.line', string='Last Vendor Invoice Lines for Product', compute="_get_vendor_invoice_lines", readonly=False, copy=False)
     
-    #product_seller_ids              = fields.One2many('product.supplierinfo', 'product_tmpl_id', string='Seller Id', readonly=False)
+    #@api.multi
+    #@api.onchange('product_id')
+    #def _get_sellers_id(self):
+    #    for line in self:
+    #        if line.product_tmpl_id:
+    #            domain = [  ('product_tmpl_id', '=', line.product_tmpl_id.id ),
+    #                        ('date_end'  , '!=', False  )  ]
+    #            sellers = self.env['product.supplierinfo'].search(domain)
+    #            if sellers:
+    #                line.product_seller_ids = sellers 
 
-    
-    product_seller_ids              = fields.Many2many('product.supplierinfo', string='Seller Id', compute="_get_sellers_id", readonly=False, copy=False)
-    product_customer_invoice_lines  = fields.Many2many('account.invoice.line',  string='Last Customer Invoice Lines for Product', compute="_get_customer_invoice_lines", readonly=False, copy=False)
-    product_vendor_invoice_lines    = fields.Many2many('account.invoice.line', string='Last Vendor Invoice Lines for Product', compute="_get_vendor_invoice_lines", readonly=False, copy=False)
-    
-
-    @api.multi
-    @api.onchange('product_id')
-    def _get_sellers_id(self):
-        for line in self:
-            if line.product_tmpl_id:
-                domain = [  ('product_tmpl_id', '=', line.product_tmpl_id.id ),
-                            ('date_end'  , '!=', False  )  ]
-                sellers = self.env['product.supplierinfo'].search(domain)
-                if sellers:
-                    line.product_seller_ids = sellers 
-
-    @api.multi
-    @api.onchange('product_id')
-    def _get_customer_invoice_lines(self):
-        for line in self:
-            if line.product_id:
+    #@api.multi
+    #@api.onchange('product_id')
+    #def _get_customer_invoice_lines(self):
+    #    for line in self:
+    #        if line.product_id:
             
-                domain = [  ('invoice_id.partner_id', '=', line.order_partner_id.id ),
-                            ('product_id', '=', line.product_id.id ),
-                            ('invoice_id.type', '=', 'out_invoice' ),
-                            ('invoice_id.state', 'not in', ('cancel', 'draft') )  ]
+    #            domain = [  ('invoice_id.partner_id', '=', line.order_partner_id.id ),
+    #                        ('product_id', '=', line.product_id.id ),
+    #                        ('invoice_id.type', '=', 'out_invoice' ),
+    #                        ('invoice_id.state', 'not in', ('cancel', 'draft') )  ]
 
-                line.product_customer_invoice_lines = self.env['account.invoice.line'].search(domain)
+    #            line.product_customer_invoice_lines = self.env['account.invoice.line'].search(domain)
     
-    @api.multi
-    @api.onchange('product_id')
-    def _get_vendor_invoice_lines(self):
-        for line in self:
-            if line.product_id:
-                domain = [  ('product_id', '=', line.product_id.id ),
-                            ('invoice_id.type', '=', 'in_invoice' ),
-                            ('invoice_id.state', 'not in', ('cancel', 'draft') )  ]
+    #@api.multi
+    #@api.onchange('product_id')
+    #def _get_vendor_invoice_lines(self):
+    #    for line in self:
+    #        if line.product_id:
+    #            domain = [  ('product_id', '=', line.product_id.id ),
+    #                        ('invoice_id.type', '=', 'in_invoice' ),
+    #                        ('invoice_id.state', 'not in', ('cancel', 'draft') )  ]
 
-                line.product_vendor_invoice_lines = self.env['account.invoice.line'].search(domain)
-
-
+    #            line.product_vendor_invoice_lines = self.env['account.invoice.line'].search(domain)
 
 
     @api.multi

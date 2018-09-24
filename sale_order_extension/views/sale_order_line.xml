@@ -84,40 +84,6 @@
             </xpath>
 
 
-            <xpath expr="//field[@name='order_line']/form//field[@name='name']" position="after">
-                  <label for="product_seller_ids"/>
-                  <field name="product_seller_ids">
-                      <tree string="Ultimos precio de proveedor">
-                          <field name="name"/>
-                          <field name="price"/>
-                          <field name="product_name"/>
-                          <field name="date_start"/>
-                          <field name="date_end"/>
-                      </tree>
-                  </field>
-            </xpath>
-
-            <xpath expr="//field[@name='order_line']/form//field[@name='product_seller_ids']" position="after">
-                  <label for="product_customer_invoice_lines"/>
-                  <field name="product_customer_invoice_lines">
-                      <tree string="Ultimos precio de venta al cliente">
-                          <field name="partner_id"/>
-                          <field name="price_unit"/>
-                          <field name="write_date"/>
-                      </tree>
-                  </field>
-            </xpath>
-            
-            <xpath expr="//field[@name='order_line']/form//field[@name='product_seller_ids']" position="after">
-                  <label for="product_vendor_invoice_lines"/>
-                  <field name="product_vendor_invoice_lines">
-                      <tree string="Ultimos precio de compra a proveedor">
-                          <field name="partner_id"/>
-                          <field name="price_unit"/>
-                          <field name="write_date"/>
-                      </tree>
-                  </field>
-            </xpath>
           </data>
         </field>
     </record>

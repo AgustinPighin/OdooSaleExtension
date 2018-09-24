@@ -14,6 +14,13 @@ class SaleOrderLine(models.Model):
         context={'show_sale': True}
     )
 
+    product_tmpl_id_new = fields.Many2one(
+        comodel_name="product.template", related="product_id.product_tmpl_id",
+        readonly=False)
+
+    #product_seller_ids_new = fields.One2many( 'product.supplierinfo', 'product_tmpl_id', related="product_tmpl_id_new", string='Sellers Prices')
+
+
     @api.depends('order_id.manually_set_invoiced')
     def _compute_invoice_status(self):
         """
