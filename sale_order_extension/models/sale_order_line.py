@@ -234,7 +234,6 @@ class SaleOrderLine(models.Model):
                 seller      = line.product_tmpl_id._select_sale_seller( quantity=qty, date=today and today[:10], uom_id=product_uom )
                 
                 if seller:
-                    
 
                     _logger.info('2.4 TESTAGU-SaleItem-Fecha de linea %s' % (seller.date_end))
 
@@ -242,29 +241,44 @@ class SaleOrderLine(models.Model):
                         continue
 #                    today = datetime.today(),DF)
                     if seller.date_end and seller.date_end < today:
+
                         _logger.info('2.5 TESTAGU-SaleItem-dateend<today %s < %s' % (seller.date_end,today))
+
                         line.last_seller_brand = ' '
-                        line.last_seller_price = 0.0
                         line.last_seller_date  = False
+                        line.last_seller_price = 0.0
+                        line.purchase_price    = 0.0
+                        line.last_seller_id    = False
+                        line.price_unit        = 0.0
+
                     elif seller.date_end and today <= seller.date_end:
+                        
                         _logger.info("2.6.1 TESTAGU-SaleItem-Seller Found %s" % (seller.id))
                         _logger.info('2.6.2 TESTAGU-SaleItem-Seller Found today %s <date_end%s ' % (today,seller.date_end))
-                        line.last_seller_brand = seller.product_name
-                        line.last_seller_date  = seller.date_start
                         _logger.info("2.6.3 TESTAGU-SaleItem-Product Name %s Date Start %s" % (seller.product_name,line.last_seller_date))
-                        line.last_seller_price = seller.price
                         _logger.info('2.6.4 TESTAGU-SaleItem-Last Seller Price %s ' % (line.last_seller_price))
-                        line.purchase_price    = seller.price
-                        #line.cost_subtotal     = line.purchase_price * line.product_uom_qty
                         _logger.info('2.6.5 TESTAGU-SaleItem-Purchase Price %s' % (line.purchase_price))
 
-                        #if not line.rentabilidad:
-                        #line.rentabilidad = line.order_id.rentabilidad_default
+                        line.last_seller_brand = seller.product_name
+                        line.last_seller_date  = seller.date_start
+                        line.last_seller_price = seller.price
+                        line.purchase_price    = seller.price
                         line.last_seller_id    = seller.id
                         line.price_unit        = line.purchase_price * ( 1 + ( line.rentabilidad / 100 ) )
+
                         _logger.info('2.6.6 TESTAGU-SaleItem-Price Unit %s' % (line.price_unit))
                     else:
                          _logger.info('TESTAGU-SaleItem-No fue nada juez')
+
+                else:
+
+                    line.last_seller_brand = ' '
+                    line.last_seller_date  = False
+                    line.last_seller_price = 0.0
+                    line.purchase_price    = 0.0
+                    line.last_seller_id    = False
+                    line.price_unit        = 0.0
+                
 
 
 class ResPartner(models.Model):
