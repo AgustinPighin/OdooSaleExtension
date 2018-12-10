@@ -104,7 +104,7 @@ class SaleOrderLine(models.Model):
 
                 line.product_vendor_invoice_lines = self.env['account.invoice.line'].search(
                     [  ('product_id', '=', line.product_id.id ),
-                        ('invoice_id.type', '=', 'out_invoice' ),
+                        ('invoice_id.type', '=', 'in_invoice' ),
                         ('invoice_id.state', 'not in', ('cancel', 'draft') )  ]
                 )
     
@@ -119,7 +119,7 @@ class SaleOrderLine(models.Model):
                     [   
                         #('invoice_id.partner_id', '=', line.order_partner_id.id ),
                         ('product_id', '=', line.product_id.id ),
-                        ('invoice_id.type', '=', 'in_invoice' ),
+                        ('invoice_id.type', '=', 'out_invoice' ),
                         ('invoice_id.state', 'not in', ('cancel', 'draft') )  ]
                 )
 
