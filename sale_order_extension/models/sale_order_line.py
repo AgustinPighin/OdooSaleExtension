@@ -58,6 +58,14 @@ class SaleOrder(models.Model):
         self.order_line._update_cost_subtotal()
         self.order_line._update_margin_extended()
 
+    @api.multi
+    def calculate_item_history(self):
+        _logger.info("3.1-TESTAGU-SALE HEADER-Recalcular item history")
+        self.order_line.get_history_seller_price()
+#        self.order_line.get_history_vendor_invoice()
+        self.order_line.get_history_customer_invoice()
+
+
 
 class SaleOrderLine(models.Model):
     
@@ -71,10 +79,51 @@ class SaleOrderLine(models.Model):
     rentabilidad  = fields.Float(string='Rentabilidad (%)', store="True", digits=dp.get_precision('Discount'),default=20.0)
     cost_subtotal = fields.Monetary(string='Costo Subtotal',store="True")
    
-    #product_seller_ids              = fields.Many2many('product.supplierinfo', string='Seller Id', compute="_get_sellers_id", readonly=False, copy=False)
-    #product_customer_invoice_lines  = fields.Many2many('account.invoice.line',  string='Last Customer Invoice Lines for Product', compute="_get_customer_invoice_lines", readonly=False, copy=False)
-    #product_vendor_invoice_lines    = fields.Many2many('account.invoice.line', string='Last Vendor Invoice Lines for Product', compute="_get_vendor_invoice_lines", readonly=False, copy=False)
+    product_seller_ids              = fields.Many2many('product.supplierinfo', string='Seller Id', readonly=False, copy=False)
+    product_customer_invoice_lines  = fields.Many2many('account.invoice.line', string='Last Customer Invoice Lines for Product', readonly=False, copy=False)
+    product_vendor_invoice_lines    = fields.Many2many('account.invoice.line', string='Last Vendor Invoice Lines for Product',  readonly=False, copy=False)
     
+
+    @api.multi
+    def get_history_seller_price(self):
+
+        for line in self:
+ 
+            if line.product_tmpl_id:
+
+                line.product_seller_ids = self.env['product.supplierinfo'].search(
+                    [  ('product_tmpl_id', '=', line.product_tmpl_id.id ),
+                        ('date_end'  , '!=', False  )  ]
+                )
+    @api.multi
+    def get_history_vendor_invoice(self):
+
+        for line in self:
+ 
+            if line.product_tmpl_id:
+
+                line.product_vendor_invoice_lines = self.env['account.invoice.line'].search(
+                    [  ('product_id', '=', line.product_id.id ),
+                        ('invoice_id.type', '=', 'out_invoice' ),
+                        ('invoice_id.state', 'not in', ('cancel', 'draft') )  ]
+                )
+    
+    @api.multi
+    def get_history_customer_invoice(self):
+
+        for line in self:
+ 
+            if line.product_tmpl_id:
+
+                line.product_customer_invoice_lines = self.env['account.invoice.line'].search(
+                    [   
+                        #('invoice_id.partner_id', '=', line.order_partner_id.id ),
+                        ('product_id', '=', line.product_id.id ),
+                        ('invoice_id.type', '=', 'in_invoice' ),
+                        ('invoice_id.state', 'not in', ('cancel', 'draft') )  ]
+                )
+
+
     #@api.multi
     #@api.onchange('product_id')
     #def _get_sellers_id(self):
